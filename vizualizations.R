@@ -79,6 +79,30 @@ ggplot(results1, aes(x=Year, y=cmw_viralsharing)) +
     stroke=0.5) +
   theme_classic()
 
+ggplot(results1, aes(x=Initial_year, y=cmw_viralsharing)) +
+  geom_line() + 
+  xlab("")
+
+ggplot(results1, aes(x=Dissim_500m, y=PrimaryLand_500m, size = cmw_viralsharing)) +
+  geom_point(alpha=0.7) +
+  xlim(0,5) +
+  scale_size(range = c(.001, 2))
+
+names(break_dates_df)[names(break_dates_df) == "Site"] <- "site"
+results2 <- left_join(results1, break_dates_df, by = "site")
+
+ggplot(results2, aes(x=Break_Date)) +
+  geom_histogram()
+
+results2$time_since_conversion <- results2$Year - results2$Break_Date
+
+results_positive <- subset(results2, time_since_conversion > 0)
+
+ggplot(results_positive, aes(x=time_since_conversion, y=cmw_viralsharing)) +
+  geom_point() +
+  xlim(0,2) +
+  theme_classic()
+
 install.packages("hrbthemes")
 library(hrbthemes)
 
