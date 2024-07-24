@@ -342,11 +342,41 @@ hosts_sub$ZoonoticHost[hosts_sub$ZoonoticHost == "FALSE"] <- 0
 
 dd6 <- left_join(dd5, hosts_sub, by = "Host")
 
+names(dd6)[names(dd6) == "Site_ID/SSS"] <- "site"
+
+dd7 <- dd6 %>%
+  group_by(site) %>%
+  mutate(site_host_richness = sum(ZoonoticHost, na.rm = TRUE)) %>%
+  ungroup()
+
+dd_sub <- dd7 %>% select(site, site_host_richness)
+dd_sub <- dd_sub %>% distinct(site, .keep_all = TRUE)
+
+folder_path <- "~/Desktop/DATABASES/data_modified"
+file_path <- file.path(folder_path, "dd7.rds")
+saveRDS(dd7, file = file_path)
+
 # --------------------------------------------------- MODELSSSSSSS------------------------------------------------------------#
 
 library(lme4)
+library(lmerTest)
+names(results2)[names(results2) == "Reference.x"] <- "Reference"
 
-model1 = lmer(cmw_viralsharing ~ Dissim_5km + (1 | site), data = results2)
+model1 = lmer(cmw_viralsharing ~ PrimaryLand_5km*Dissim_5km + (1 |site) + (1 |Reference), data = results2)
+
+
+
+hist(results2$PrimaryLand_500m)
+
+summary(model1)
+
 print(model1)
 
-model 2
+
+
+
+
+
+
+
+

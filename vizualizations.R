@@ -103,10 +103,148 @@ ggplot(results_positive, aes(x=time_since_conversion, y=cmw_viralsharing)) +
   xlim(0,2) +
   theme_classic()
 
+
+folder_path <- "~/Desktop/DATABASES/data_modified"
+file_path <- file.path(folder_path, "results2.rds")
+saveRDS(results2, file = file_path)
+
 install.packages("hrbthemes")
 library(hrbthemes)
 
+#----------- MAP--------------------------------------------------#
 
+# Define the destination directory
+dest_dir <- "DATA"
+# Check if the directory exists, and create it if it doesn't
+if (!dir.exists(dest_dir)) {
+  dir.create(dest_dir)
+}
+
+# Define the destination file path
+dest_file <- file.path(dest_dir, "world_shape_file.zip")
+
+# Download the file
+download.file(
+  "https://raw.githubusercontent.com/holtzy/R-graph-gallery/master/DATA/world_shape_file.zip",
+  destfile = dest_file
+)
+
+# Unzip the file
+unzip(dest_file, exdir = dest_dir)
+
+# List the contents of the DATA directory to find the shapefile path
+print(list.files(dest_dir, recursive = TRUE))
+
+# Load the required packages
+if (!requireNamespace("sf", quietly = TRUE)) {
+  install.packages("sf")
+}
+library(sf)
+
+# Determine the correct path to the shapefile
+shapefile_path <- list.files(dest_dir, pattern = "\\.shp$", full.names = TRUE)
+
+# Check if the shapefile was found
+if (length(shapefile_path) == 0) {
+  stop("Shapefile not found in the unzipped contents.")
+} else {
+  # Read the shapefile
+  world <- st_read(shapefile_path[1])
+  
+  # Print a summary of the shapefile
+  print(world)
+}
+
+ggplot(world) +
+  geom_sf() +
+  theme_minimal() +
+  labs(title = "World Map")
+
+predicts_countries <- PREDICTS_mammalia %>% select(SSS, Longitude, Latitude, Country)
+predicts_countries <- predicts_countries %>% distinct(SSS, .keep_all = TRUE)
+predicts_countries <- predicts_countries %>% select(Longitude, Latitude, Country)
+MCDB_countries <- MCDB_sites %>% select(Longitude, Latitude, Country)
+
+MCDB_countries$Longitude <- as.double(MCDB_countries$Longitude)
+MCDB_countries$Latitude <- as.double(MCDB_countries$Latitude)
+as.double(MCDB_countries$Longitude)
+as.double(MCDB_countries$Latitude)
+
+
+all_countries <- bind_rows(MCDB_countries, predicts_countries)
+
+all_countries <- all_countries %>%
+  mutate(Country = recode(Country,
+                          "United States of America" = "United States"))
+
+country_counts <- all_countries %>%
+  group_by(Country) %>%
+  summarize(num_sites = n())
+
+world1 <- left_join(world, country_counts, by = c("NAME" = "Country"))
+world1$num_sites[is.na(world$num_sites)] <- 0
+
+ggplot(world1) +
+  geom_sf(aes(fill = num_sites)) +
+  scale_fill_gradient(low = "lightgreen", high = "darkgreen", na.value = "white") +
+  theme_minimal() +
+  labs(
+    title = "Number of Sites per Country",
+    fill = "Number of Sites"
+  )
+
+
+dd4 = dd5
+dd4$`Site_ID/SSS` = as.vector(dd4$`Site_ID/SSS`)
+
+# add year
+dd4$Year = as.numeric(substr(dd4$Initial_year, 1, 4))
+
+# view distribution of years; exclude everything before 1980 
+dd4 %>% 
+  dplyr::select(`Site_ID/SSS`, Year) %>%
+  distinct() %>%
+  ggplot() + 
+  geom_histogram(aes(x=Year))
+
+# filter out earlier years (keep 1985 onwards) and keep lat lon referenced
+dd4 = dd4[ !is.null(dd4$Year) & dd4$Year > 1985, ]
+dd4 = dd4[ !is.na(dd4$Longitude) & !is.na(dd4$Latitude), ]
+n_distinct(dd4$`Site_ID/SSS`) # 2,888 sites
+
+names(dd4)[names(dd4) == "Site_ID/SSS"] <- "site"
+
+sites <- dd4 %>% dplyr::select(site, Longitude, Latitude)
+sites <- sites %>% distinct(site, .keep_all = TRUE)
+
+all_sites_sf <- st_as_sf(sites, coords = c("Longitude", "Latitude"), crs = 4326)
+
+map_plot <- ggplot(world1) +
+  geom_sf(aes(fill = num_sites)) +
+  scale_fill_gradient(low = "lightgreen", high = "darkgreen", na.value = "white") +
+  theme_minimal() +
+  labs(fill = "Number of Sites per Country") +
+  geom_sf(data = all_sites_sf, aes(color = "Site"), size = 0.3) +
+  scale_color_manual(
+    values = c("Site" = "red"),
+    guide = guide_legend(
+      title = "Site",
+      title.position = "top",
+      title.hjust = 0.5,
+      label = FALSE
+    )
+  )
+  
+ggsave("map_with_sites.png", plot = map_plot, width = 10, height = 8, dpi = 300)
+  
+  
+  #geom_sf(data = all_sites_sf, aes(color = "red"), size = 0.2)
+ 
+
+
+pru
+
+print(world$NAME)
 
 rm(vs_results)
 rm(site_vs)
