@@ -295,27 +295,39 @@ for(i in unique_sites){
 }
 
 # ---------------------------Add dd5_remotesensing metrics-----------------------------------------------------------
-
 names(dd5_remotesensingmetrics)[names(dd5_remotesensingmetrics) == "Site_ID/SSS"] <- "site"
-results <- left_join(dd5_remotesensingmetrics, vs_results1, by = "site")
+results <- left_join(dd5_remotesensingmetrics, vs_results2, by = "site")
 
-site_dates <- dd5 %>% select(`Site_ID/SSS`, Initial_year)
-site_dates1 <- unique(site_dates)
-names(site_dates1)[names(site_dates1) == "Site_ID/SSS"] <- "site"
+names(dd5)[names(dd5) == "Site_ID/SSS"] <- "site"
 
-results1 <- left_join(results, site_dates1, by = "site")
-results1$Initial_year <- as.Date(results1$Initial_year)
-results1$Year <- year(results1$Initial_year)
+dd5_sub <- dd5 %>% distinct(site, .keep_all = TRUE)
+dd5_sub <- dd5_sub %>% select(site, Diversity_metric_type)
 
-names(break_dates_df)[names(break_dates_df) == "Site"] <- "site"
-results2 <- left_join(results1, break_dates_df, by = "site")
+results <- left_join(results, dd5_sub)
 
-ggplot(results2, aes(x=Break_Date)) +
-  geom_histogram()
+# Change the cmw_viralsharing to 0 if there is an occurrence study because the metric is only relevant for abundance
 
-results2$time_since_conversion <- results2$Year - results2$Break_Date
+results$cmw_viralsharing[results$Diversity_metric_type == "Occurrence"] <- NA
 
-results_positive <- subset(results2, time_since_conversion > 0)
+#----------------------Only Relevant for EVI ts data-----------------------------------------
+
+#site_dates <- dd5 %>% select(`Site_ID/SSS`, Initial_year)
+#site_dates1 <- unique(site_dates)
+#names(site_dates1)[names(site_dates1) == "Site_ID/SSS"] <- "site"
+
+#results1 <- left_join(results, site_dates1, by = "site")
+#results1$Initial_year <- as.Date(results1$Initial_year)
+#results1$Year <- year(results1$Initial_year)
+
+#names(break_dates_df)[names(break_dates_df) == "Site"] <- "site"
+#results2 <- left_join(results1, break_dates_df, by = "site")
+
+#ggplot(results2, aes(x=Break_Date)) +
+ # geom_histogram()
+
+#results2$time_since_conversion <- results2$Year - results2$Break_Date
+
+#results_positive <- subset(results2, time_since_conversion > 0)
 
 # ----------------------------- lo and behold it's a results data frame!-------------------------------------------#
 
@@ -362,7 +374,7 @@ library(lme4)
 library(lmerTest)
 names(results2)[names(results2) == "Reference.x"] <- "Reference"
 
-model1 = lmer(cmw_viralsharing ~ PrimaryLand_5km*Dissim_5km + (1 |site) + (1 |Reference), data = results2)
+model1 = lmer(cmw_viralsharing ~ PrimaryLand_5km*Dissim_5km + (1 |site) + (1 |Reference), data = results)
 
 
 
