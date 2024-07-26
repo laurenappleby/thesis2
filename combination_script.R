@@ -296,7 +296,7 @@ for(i in unique_sites){
 
 # ---------------------------Add dd5_remotesensing metrics-----------------------------------------------------------
 names(dd5_remotesensingmetrics)[names(dd5_remotesensingmetrics) == "Site_ID/SSS"] <- "site"
-results <- left_join(dd5_remotesensingmetrics, vs_results2, by = "site")
+results <- left_join(dd5_remotesensingmetrics, vs_results3, by = "site")
 
 names(dd5)[names(dd5) == "Site_ID/SSS"] <- "site"
 
@@ -374,12 +374,16 @@ library(lme4)
 library(lmerTest)
 names(results2)[names(results2) == "Reference.x"] <- "Reference"
 
-model1 = lmer(cmw_viralsharing ~ PrimaryLand_5km*Dissim_5km + (1 |site) + (1 |Reference), data = results)
+model1 = lmer(mean_viralsharing ~ PrimaryLand_500m+Dissim_500m + log(species_richness +1) + (1 |Reference), data = results)
+model2 = lmer(mean_viralsharing ~ PrimaryLand_5km+Dissim_5km + log(species_richness +1) + (1 |Reference), data = results[results$total_abundance>0,])
 
-
-
-hist(results2$PrimaryLand_500m)
-
+hist(resid(model1), 100)
+summary(model2)
+hist(results$species_richness)
+plot(model1)
+hist(results$mean_viralsharing)
+hist(results$cmw_viralsharing)
+plot(results$PrimaryLand_500m, results$Dissim_500m)
 summary(model1)
 
 print(model1)
