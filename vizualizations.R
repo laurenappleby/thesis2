@@ -4,6 +4,28 @@ install.packages("wesanderson")
 library(wesanderson)
 install.packages("RColorBrewer")
 library(RColorBrewer)
+library(gridExtra)
+
+dd4 = dd5
+dd4$`Site_ID/SSS` = as.vector(dd4$`Site_ID/SSS`)
+
+# add year
+dd4$Year = as.numeric(substr(dd4$Initial_year, 1, 4))
+
+# view distribution of years; exclude everything before 1980 
+dd4 %>% 
+  dplyr::select(`Site_ID/SSS`, Year) %>%
+  distinct() %>%
+  ggplot() + 
+  geom_histogram(aes(x=Year))
+
+# filter out earlier years (keep 1985 onwards) and keep lat lon referenced
+dd4 = dd4[ !is.null(dd4$Year) & dd4$Year > 1985, ]
+dd4 = dd4[ !is.na(dd4$Longitude) & !is.na(dd4$Latitude), ]
+n_distinct(dd4$`Site_ID/SSS`) # 2,888 sites
+
+names(dd4)[names(dd4) == "Site_ID/SSS"] <- "site"
+unique(dd4$HostOrder)
 
 dd_zoo <- dplyr::filter(dd5, HostOrder %in% c("Rodentia", "Chiroptera", "Eulipotyphla", "Carnivora", "Artiodactyla", "Primates"))
 
@@ -14,15 +36,73 @@ dd_plot <- ggplot(data.frame(dd_zoo), aes(x=HostOrder, fill = HostOrder)) +
   theme(legend.position = "none")
 dd_plot
 
-df_with_frequency <- dd_zoo %>%
+zoo_predicts <- head(dd_zoo, 26610)
+
+df_with_frequency <- zoo_predicts %>%
   group_by(HostOrder) %>%
   mutate(Frequency = n()) %>%
   ungroup()
 
-frequency <- data.frame(Order = c("Rodentia", "Chiroptera", "Eulipotyphla", "Carnivora", "Artiodactyla", "Primates"),
-                        Frequency = c(13492, 6692, 1556, 6496, 4050, 1774))
+frequency_predicts <- data.frame(Order = c("Rodentia", "Chiroptera", "Eulipotyphla", "Carnivora", "Artiodactyla", "Primates"),
+                        Frequency = c(7668, 6692, 600, 5936, 3946, 1768),
+                        study = c("Predicts", "Predicts", "Predicts", "Predicts", "Predicts", "Predicts"))
 
-pie(frequency$Frequency, labels = frequency$Order)
+
+frequency_predicts <- frequency_predicts %>%
+  dplyr::mutate(Percentage = Frequency / sum(Frequency) * 100)
+
+palette <- brewer.pal(n = 6, name = "Set3")
+set3_colors_6 <- c("#8DD3C7", "#FFFFB3", "#FDB462", "#FB8072", "#80B1D3", "#BEBADA")
+
+#FDB462
+# Create the pie chart with a legend
+predicts_plot <- ggplot(frequency_predicts, aes(x = "", y = Frequency, fill = Order)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  theme_void() + # Remove background, grid, and axis elements
+  labs(fill = "Order", title = "Predicts Mammals") +
+  theme(legend.position = "left") +
+  scale_fill_manual(values = set3_colors_6)
+
+
+pie(frequency_predicts$Frequency, labels = frequency_predicts$Order)
+
+zoo_mc <- tail(dd_zoo, 7450)
+
+df_with_frequency <- zoo_mc %>%
+  group_by(HostOrder) %>%
+  mutate(Frequency = n()) %>%
+  ungroup()
+
+frequency_mc <- data.frame(Order = c("Rodentia", "Eulipotyphla", "Carnivora", "Artiodactyla", "Primates"),
+                        Frequency = c(5824, 956, 560, 104, 6),
+                        study = c("Mammal Communities", "Mammal Communities", "Mammal Communities", "Mammal Communities", "Mammal Communities"))
+
+frequency_mc <- frequency_mc %>%
+  dplyr::mutate(Percentage = Frequency / sum(Frequency) * 100)
+
+set3_colors <- c("#8DD3C7", "#FFFFB3","#FB8072", "#80B1D3","#BEBADA" )
+# Create the pie chart with a legend
+mc_plot <- ggplot(frequency_mc, aes(x = "", y = Frequency, fill = Order)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  theme_void() + # Remove background, grid, and axis elements
+  labs(fill = "Order", title = "Mammal Communities") +
+  theme(legend.position = "left") +
+  scale_fill_manual(values = set3_colors)
+
+combined_plot <- grid.arrange(predicts_plot, mc_plot, ncol = 1)
+ggsave("combined_plot_with_legends_on_left.png", combined_plot, width = 10, height = 12)
+
+#pie(frequency_mc$Frequency, labels = frequency_mc$Order)
+
+#frequency <- bind_rows(frequency_mc, frequency_predicts)
+
+#ggplot(frequency, aes(fill=study, y=Frequency, x=Order)) + 
+  geom_bar(position="dodge", stat="identity")
+
+##############################----------Exploration---------------#######################
+#-----------------------------------------------------------------------------------------
 
 ggplot(dd5_remotesensingmetrics, aes(x=Dissim_5km, y=PrimaryLand_5km)) + 
   geom_point(
@@ -111,7 +191,8 @@ saveRDS(results2, file = file_path)
 install.packages("hrbthemes")
 library(hrbthemes)
 
-#----------- MAP--------------------------------------------------#
+###################################----------- MAP--------------------#################################
+#------------------------------------------------------------------------------------------------------
 
 # Define the destination directory
 dest_dir <- "DATA"
@@ -227,10 +308,10 @@ map_plot <- ggplot(world1) +
   scale_fill_gradient(low = "lightgreen", high = "darkgreen", na.value = "white") +
   theme_minimal() +
   labs(fill = "Number of Sites per Country") +
-  geom_sf(data = predicts_sf, aes(color = "Predicts"), size = 0.4) +
-  geom_sf(data = mc_sf, aes(color = "Mammal Communities"), size = 0.4) +
+  geom_sf(data = predicts_sf, aes(color = "Predicts Mammals"), size = 0.6) +
+  geom_sf(data = mc_sf, aes(color = "Mammal Communities"), size = 0.6) +
   scale_color_manual(
-    values = c("Predicts" = "red", "Mammal Communities" = "#4B0082"),
+    values = c("Predicts Mammals" = "red", "Mammal Communities" = "#4B0082"),
     guide = guide_legend(
       title = "Site Source",
       title.position = "top",
@@ -238,7 +319,7 @@ map_plot <- ggplot(world1) +
       override.aes = list(size = 4)
     )
   ) +
-  theme(legend.position = "top")
+  theme(legend.position = "bottom")
 
 map_plot  
 ggsave("map_with_sites2.png", plot = map_plot, width = 10, height = 8, dpi = 300)
