@@ -216,26 +216,32 @@ names(dd4)[names(dd4) == "Site_ID/SSS"] <- "site"
 
 sites <- dd4 %>% dplyr::select(site, Longitude, Latitude)
 sites <- sites %>% distinct(site, .keep_all = TRUE)
+sites_predicts <- head(sites, 2409)
+sites_mc <- tail(sites, 479)
 
-all_sites_sf <- st_as_sf(sites, coords = c("Longitude", "Latitude"), crs = 4326)
+predicts_sf <- st_as_sf(sites_predicts, coords = c("Longitude", "Latitude"), crs = 4326)
+mc_sf <- st_as_sf(sites_mc, coords = c("Longitude", "Latitude"), crs = 4326)
 
 map_plot <- ggplot(world1) +
   geom_sf(aes(fill = num_sites)) +
   scale_fill_gradient(low = "lightgreen", high = "darkgreen", na.value = "white") +
   theme_minimal() +
   labs(fill = "Number of Sites per Country") +
-  geom_sf(data = all_sites_sf, aes(color = "Site"), size = 0.3) +
+  geom_sf(data = predicts_sf, aes(color = "Predicts"), size = 0.4) +
+  geom_sf(data = mc_sf, aes(color = "Mammal Communities"), size = 0.4) +
   scale_color_manual(
-    values = c("Site" = "red"),
+    values = c("Predicts" = "red", "Mammal Communities" = "#4B0082"),
     guide = guide_legend(
-      title = "Site",
+      title = "Site Source",
       title.position = "top",
-      title.hjust = 0.5,
-      label = FALSE
+      title.hjust = 0.2,
+      override.aes = list(size = 4)
     )
-  )
-  
-ggsave("map_with_sites.png", plot = map_plot, width = 10, height = 8, dpi = 300)
+  ) +
+  theme(legend.position = "top")
+
+map_plot  
+ggsave("map_with_sites2.png", plot = map_plot, width = 10, height = 8, dpi = 300)
   
   
   #geom_sf(data = all_sites_sf, aes(color = "red"), size = 0.2)
