@@ -177,11 +177,6 @@ dd2 <- left_join(dd2, viral_richness, by = "HostTaxID")
 dd2 <- dd2 %>%
   mutate(Virus_richness = replace_na(Virus_richness, 0))
 
-#----------------Adding in categorical classification for land use (might not use)---------------------------------
-
-cop_7 <- cop_6 %>% select(`Site_ID/SSS`, classification)
-dd4 <- left_join(dd3, cop_7, by = "Site_ID/SSS")
-
 # ---------------------------------------Loop to run through the viral sharing data--------------------
 
 folder_path <- "~/Desktop/DATABASES/data_modified"
@@ -301,7 +296,7 @@ results <- left_join(dd5_remotesensingmetrics, vs_results3, by = "site")
 names(dd5)[names(dd5) == "Site_ID/SSS"] <- "site"
 
 dd5_sub <- dd5 %>% distinct(site, .keep_all = TRUE)
-dd5_sub <- dd5_sub %>% select(site, Diversity_metric_type)
+dd5_sub <- dd5_sub %>% dplyr::select(site, Diversity_metric_type)
 
 results <- left_join(results, dd5_sub)
 
@@ -309,7 +304,7 @@ results <- left_join(results, dd5_sub)
 
 results$cmw_viralsharing[results$Diversity_metric_type == "Occurrence"] <- NA
 
-#----------------------Only Relevant for EVI ts data-----------------------------------------
+#----------------------Only Relevant for EVI ts data------------------------------------------------
 
 #site_dates <- dd5 %>% select(`Site_ID/SSS`, Initial_year)
 #site_dates1 <- unique(site_dates)
@@ -328,7 +323,26 @@ results$cmw_viralsharing[results$Diversity_metric_type == "Occurrence"] <- NA
 #results2$time_since_conversion <- results2$Year - results2$Break_Date
 
 #results_positive <- subset(results2, time_since_conversion > 0)
+#----------------Adding in categorical classification for land use (might not use)---------------------------------
 
+cop_7 <- cop_6 %>% dplyr::select(site, classification)
+results <- left_join(results, cop_7, by = "site")
+
+site_results <- results %>% dplyr::select(Reference, site, Latitude, Longitude)
+
+#file_path <- "~/Desktop/DATABASES/data_modified/site_results.csv"
+#write.csv(site_results, file = file_path, row.names = FALSE)
+
+#---------------------------------Looking at PREDICTS Land-----------------------------------------------------#
+
+predicts_results <- head(results, 2410)
+predicts <- PREDICTS_mammalia %>% dplyr::select(SSS, Reference, Predominant_land_use)
+predicts <- predicts %>% distinct(SSS, .keep_all = TRUE)
+names(predicts)[names(predicts) == "SSS"] <- "site"
+predicts_results <- left_join(predicts_results, predicts, by = "site")
+predicts_results %>% count(Predominant_land_use,sort=TRUE)
+predicts_results <- predicts_results1
+rm(predicts_results1)
 # ----------------------------- lo and behold it's a results data frame!-------------------------------------------#
 
 #----------------------------- NOW TIME TO CALCULATE HOST RICHNESS THIS SHOULD BE FUN------------------------------------#
@@ -365,26 +379,51 @@ dd_sub <- dd7 %>% select(site, site_host_richness)
 dd_sub <- dd_sub %>% distinct(site, .keep_all = TRUE)
 
 folder_path <- "~/Desktop/DATABASES/data_modified"
-file_path <- file.path(folder_path, "dd7.rds")
-saveRDS(dd7, file = file_path)
+file_path <- file.path(folder_path, "results.rds")
+saveRDS(results, file = file_path)
 
 # --------------------------------------------------- MODELSSSSSSS------------------------------------------------------------#
 
 library(lme4)
 library(lmerTest)
-names(results2)[names(results2) == "Reference.x"] <- "Reference"
+names(predicts_results)[names(predicts_results) == "classification.y"] <- "classification"
+names(results)[names(results) == "classification.y"] <- "classification"
 
-model1 = lmer(mean_viralsharing ~ PrimaryLand_500m+Dissim_500m + log(species_richness +1) + (1 |Reference), data = results)
+
+model1 = lmer(cmw_viralsharing ~ PrimaryLand_5km+Dissim_5km + log(species_richness +1) + Predominant_land_use + (1 |Reference), data = predicts_results)
 model2 = lmer(mean_viralsharing ~ PrimaryLand_5km+Dissim_5km + log(species_richness +1) + (1 |Reference), data = results[results$total_abundance>0,])
 
-hist(resid(model1), 100)
-summary(model2)
-hist(results$species_richness)
-plot(model1)
-hist(results$mean_viralsharing)
-hist(results$cmw_viralsharing)
-plot(results$PrimaryLand_500m, results$Dissim_500m)
+sr_model <- glmer(species_richness ~ PrimaryLand_5km+Dissim_5km + Predominant_land_use + (1 | Reference), 
+                       data = predicts_results, family = poisson)
+sr_model2 <- glmer(species_richness ~ PrimaryLand_5km+Dissim_5km + classification + (1 | Reference), 
+                   data = results, family = poisson)
+
+sr_model3 <- glmer(species_richness ~ PrimaryLand_5km+Dissim_5km + classification + (1 | Reference), 
+                   data = predicts_results, family = poisson)
+
+hist(resid(sr_model), 100)
+summary(sr_model)
+plot(sr_model)
+plot(resid(sr_model))
+
+summary(sr_model2)
+plot(sr_model2)
+plot(resid(sr_model2))
+
+summary(sr_model3)
+
 summary(model1)
+
+library(broom.mixed)
+fixed_effects <- tidy(sr_model, effects = "fixed")
+ggplot(fixed_effects, aes(x = term, y = estimate, ymin = estimate - 1.96 * std.error, ymax = estimate + 1.96 * std.error)) +
+  geom_pointrange() +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Fixed Effects Estimates", x = "Predictors", y = "Estimate (with 95% CI)")
+
+
+
 
 print(model1)
 
