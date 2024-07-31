@@ -390,11 +390,12 @@ names(predicts_results)[names(predicts_results) == "classification.y"] <- "class
 names(results)[names(results) == "classification.y"] <- "classification"
 
 
-model1 = lmer(cmw_viralsharing ~ PrimaryLand_5km+Dissim_5km + log(species_richness +1) + Predominant_land_use + (1 |Reference), data = predicts_results)
-model2 = lmer(mean_viralsharing ~ PrimaryLand_5km+Dissim_5km + log(species_richness +1) + (1 |Reference), data = results[results$total_abundance>0,])
+model1 = lmer(mean_viralsharing ~ PrimaryLand_5km+Dissim_5km + log(species_richness +1) + Predominant_land_use + (1 |Reference), data = predicts_results)
+model2 = lmer(cmw_viralsharing ~ PrimaryLand_5km+Dissim_5km + log(species_richness +1) + Predominant_land_use + (1 |Reference), data = predicts_results[predicts_results$Diversity_metric_type=="Abundance",])
 
 sr_model <- glmer(species_richness ~ PrimaryLand_5km+Dissim_5km + Predominant_land_use + (1 | Reference), 
                        data = predicts_results, family = poisson)
+
 sr_model2 <- glmer(species_richness ~ PrimaryLand_5km+Dissim_5km + classification + (1 | Reference), 
                    data = results, family = poisson)
 
@@ -406,13 +407,16 @@ summary(sr_model)
 plot(sr_model)
 plot(resid(sr_model))
 
+hist(predicts_results$species_richness) +
+  xlim= 10
+
 summary(sr_model2)
 plot(sr_model2)
 plot(resid(sr_model2))
 
 summary(sr_model3)
 
-summary(model1)
+summary(model2)
 
 library(broom.mixed)
 fixed_effects <- tidy(sr_model, effects = "fixed")
