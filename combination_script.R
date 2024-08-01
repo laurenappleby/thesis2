@@ -336,13 +336,50 @@ site_results <- results %>% dplyr::select(Reference, site, Latitude, Longitude)
 #---------------------------------Looking at PREDICTS Land-----------------------------------------------------#
 
 predicts_results <- head(results, 2410)
-predicts <- PREDICTS_mammalia %>% dplyr::select(SSS, Reference, Predominant_land_use)
+predicts <- PREDICTS_mammalia %>% dplyr::select(SSS, SSB, Use_intensity, Reference, Predominant_land_use)
 predicts <- predicts %>% distinct(SSS, .keep_all = TRUE)
 names(predicts)[names(predicts) == "SSS"] <- "site"
-predicts_results <- left_join(predicts_results, predicts, by = "site")
+predicts_results1 <- left_join(predicts_results, predicts, by = "site")
 predicts_results %>% count(Predominant_land_use,sort=TRUE)
 predicts_results <- predicts_results1
 rm(predicts_results1)
+names(predicts_results)[names(predicts_results) == "Predominant_land_use.x"] <- "Predominant_land_use"
+
+predicts_results1 <- predicts_results %>%
+  mutate(
+    Land_use = case_when(
+      Predominant_land_use == "Young secondary vegetation" ~ "Secondary",
+      Predominant_land_use == "Mature secondary vegetation" ~ "Secondary",
+      Predominant_land_use == "Intermediate secondary vegetation" ~ "Secondary",
+      Predominant_land_use == "Secondary vegetation (indeterminate age)" ~ "Secondary",
+      Predominant_land_use == "Primary vegetation" ~ "Primary",
+      Predominant_land_use == "Plantation forest" ~ "Managed",
+      Predominant_land_use == "Pasture" ~ "Managed",
+      Predominant_land_use == "Cropland" ~ "Managed",
+      Predominant_land_use == "Urban" ~ "Urban",
+      Predominant_land_use == "Cannot decide" ~ "Cannot decide",
+    )
+  )
+
+predicts_results1 <- predicts_results1 %>%
+  mutate(
+    Land_use_classification = case_when(
+      Land_use == "Secondary" & Use_intensity == "Light use" ~ "Secondary_minimal",
+      Land_use == "Secondary" & Use_intensity == "Minimal use" ~ "Secondary_minimal",
+      Land_use == "Secondary" & Use_intensity == "Intense use" ~ "Secondary_substantial",
+      Land_use == "Primary" & Use_intensity == "Light use" ~ "Primary_minimal",
+      Land_use == "Primary" & Use_intensity == "Minimal use" ~ "Primary_minimal",
+      Land_use == "Primary" & Use_intensity == "Intense use" ~ "Primary_substantial",
+      Land_use == "Managed"  ~ "Managed",
+      Land_use == "Urban"  ~ "Urban",
+      Land_use == "Cannot Decide"  ~ "NA",
+  )
+)
+
+predicts_resutls2 <- predicts_results1[, -22]
+predicts_resutls2 <- predicts_resutls2[, -22]
+predicts_results_aggregate <- predicts_resutls2
+
 # ----------------------------- lo and behold it's a results data frame!-------------------------------------------#
 
 #----------------------------- NOW TIME TO CALCULATE HOST RICHNESS THIS SHOULD BE FUN------------------------------------#
@@ -379,14 +416,14 @@ dd_sub <- dd7 %>% select(site, site_host_richness)
 dd_sub <- dd_sub %>% distinct(site, .keep_all = TRUE)
 
 folder_path <- "~/Desktop/DATABASES/data_modified"
-file_path <- file.path(folder_path, "results.rds")
-saveRDS(results, file = file_path)
+file_path <- file.path(folder_path, "predicts_results_aggregate.rds")
+saveRDS(predicts_results_aggregate, file = file_path)
 
 # --------------------------------------------------- MODELSSSSSSS------------------------------------------------------------#
 
 library(lme4)
 library(lmerTest)
-names(predicts_results)[names(predicts_results) == "classification.y"] <- "classification"
+names(predicts_resutls2)[names(predicts_resutls2) == "classification"] <- "sat_classification"
 names(results)[names(results) == "classification.y"] <- "classification"
 
 

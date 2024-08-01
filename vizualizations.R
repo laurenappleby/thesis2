@@ -309,9 +309,9 @@ map_plot <- ggplot(world1) +
   theme_minimal() +
   labs(fill = "Number of Sites per Country") +
   geom_sf(data = predicts_sf, aes(color = "Predicts Mammals"), size = 0.6) +
-  geom_sf(data = mc_sf, aes(color = "Mammal Communities"), size = 0.6) +
+  geom_sf(data = mc_sf, aes(color = "MCDB"), size = 0.6) +
   scale_color_manual(
-    values = c("Predicts Mammals" = "red", "Mammal Communities" = "#4B0082"),
+    values = c("Predicts Mammals" = "red", "MCDB" = "#4B0082"),
     guide = guide_legend(
       title = "Site Source",
       title.position = "top",
@@ -322,7 +322,7 @@ map_plot <- ggplot(world1) +
   theme(legend.position = "bottom")
 
 map_plot  
-ggsave("map_with_sites2.png", plot = map_plot, width = 10, height = 8, dpi = 300)
+ggsave("map_with_sites4.png", plot = map_plot, width = 10, height = 8, dpi = 300)
   
   
   #geom_sf(data = all_sites_sf, aes(color = "red"), size = 0.2)
