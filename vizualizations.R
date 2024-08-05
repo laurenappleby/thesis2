@@ -6,6 +6,7 @@ install.packages("RColorBrewer")
 library(RColorBrewer)
 library(gridExtra)
 
+rm(dd5)
 dd4 = dd5
 dd4$`Site_ID/SSS` = as.vector(dd4$`Site_ID/SSS`)
 
@@ -27,7 +28,7 @@ n_distinct(dd4$`Site_ID/SSS`) # 2,888 sites
 names(dd4)[names(dd4) == "Site_ID/SSS"] <- "site"
 unique(dd4$HostOrder)
 
-dd_zoo <- dplyr::filter(dd5, HostOrder %in% c("Rodentia", "Chiroptera", "Eulipotyphla", "Carnivora", "Artiodactyla", "Primates"))
+#dd_zoo <- dplyr::filter(dd5, HostOrder %in% c("Rodentia", "Chiroptera", "Eulipotyphla", "Carnivora", "Artiodactyla", "Primates"))
 
 dd_plot <- ggplot(data.frame(dd_zoo), aes(x=HostOrder, fill = HostOrder)) +
   geom_bar(width = 0.7) + scale_fill_brewer(palette = "Set2") +
@@ -36,24 +37,25 @@ dd_plot <- ggplot(data.frame(dd_zoo), aes(x=HostOrder, fill = HostOrder)) +
   theme(legend.position = "none")
 dd_plot
 
-zoo_predicts <- head(dd_zoo, 26610)
+zoo_predicts <- head(dd4, 32885)
 
 df_with_frequency <- zoo_predicts %>%
   group_by(HostOrder) %>%
   mutate(Frequency = n()) %>%
   ungroup()
 
-frequency_predicts <- data.frame(Order = c("Rodentia", "Chiroptera", "Eulipotyphla", "Carnivora", "Artiodactyla", "Primates"),
-                        Frequency = c(7668, 6692, 600, 5936, 3946, 1768),
-                        study = c("Predicts", "Predicts", "Predicts", "Predicts", "Predicts", "Predicts"))
+frequency_predicts <- data.frame(Order = c("Rodentia", "Chiroptera", "Eulipotyphla", "Carnivora", "Artiodactyla", "Primates", "Other"),
+                        Frequency = c(7668, 6692, 600, 5936, 3946, 1768, 7450),
+                        study = c("Predicts", "Predicts", "Predicts", "Predicts", "Predicts", "Predicts", "Predicts"))
 
+frequency_predicts$Order <- factor(frequency_predicts$Order, levels = c("Rodentia", "Chiroptera", "Eulipotyphla", "Carnivora", "Artiodactyla", "Primates", "Other"))
 
 frequency_predicts <- frequency_predicts %>%
   dplyr::mutate(Percentage = Frequency / sum(Frequency) * 100)
 
 palette <- brewer.pal(n = 6, name = "Set3")
-set3_colors_6 <- c("#8DD3C7", "#FFFFB3", "#FDB462", "#FB8072", "#80B1D3", "#BEBADA")
-
+set3_colors_6 <- c("#87CEFA", "#1E90FF", "#6495ED", "#4682B4", "#80B1D3", "#4169E1", "#FF8C00")
+reds <- c("#BC8F8F","#CD5C5C", "#B22222", "#E9967A", "#F08080", "#A52A2A", "#6A5ACD")
 #FDB462
 # Create the pie chart with a legend
 predicts_plot <- ggplot(frequency_predicts, aes(x = "", y = Frequency, fill = Order)) +
@@ -62,37 +64,42 @@ predicts_plot <- ggplot(frequency_predicts, aes(x = "", y = Frequency, fill = Or
   theme_void() + # Remove background, grid, and axis elements
   labs(fill = "Order", title = "Predicts Mammals") +
   theme(legend.position = "left") +
-  scale_fill_manual(values = set3_colors_6)
+  scale_fill_manual(values = set3_colors_6 )
 
-
+plot(predicts_plot)
 pie(frequency_predicts$Frequency, labels = frequency_predicts$Order)
 
-zoo_mc <- tail(dd_zoo, 7450)
+zoo_mc <- tail(dd4, 3944)
 
 df_with_frequency <- zoo_mc %>%
   group_by(HostOrder) %>%
   mutate(Frequency = n()) %>%
   ungroup()
 
-frequency_mc <- data.frame(Order = c("Rodentia", "Eulipotyphla", "Carnivora", "Artiodactyla", "Primates"),
-                        Frequency = c(5824, 956, 560, 104, 6),
-                        study = c("Mammal Communities", "Mammal Communities", "Mammal Communities", "Mammal Communities", "Mammal Communities"))
+frequency_mc <- data.frame(Order = c("Rodentia", "Eulipotyphla", "Carnivora", "Artiodactyla", "Primates", "Other"),
+                        Frequency = c(2919, 754, 61, 6, 3, 201),
+                        study = c("Mammal Communities", "Mammal Communities", "Mammal Communities", "Mammal Communities", "Mammal Communities", "Mammal Communities"))
 
 frequency_mc <- frequency_mc %>%
   dplyr::mutate(Percentage = Frequency / sum(Frequency) * 100)
 
-set3_colors <- c("#8DD3C7", "#FFFFB3","#FB8072", "#80B1D3","#BEBADA" )
+frequency_mc$Order <- factor(frequency_mc$Order, levels = c("Rodentia", "Eulipotyphla", "Carnivora", "Artiodactyla", "Primates", "Other"))
+
+
+set3_colors <- c("#87CEFA", "#6495ED", "#4682B4", "#80B1D3", "#4169E1", "#FF8C00")
 # Create the pie chart with a legend
 mc_plot <- ggplot(frequency_mc, aes(x = "", y = Frequency, fill = Order)) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar("y", start = 0) +
   theme_void() + # Remove background, grid, and axis elements
-  labs(fill = "Order", title = "Mammal Communities") +
+  labs(fill = "Order", title = "MCBD") +
   theme(legend.position = "left") +
   scale_fill_manual(values = set3_colors)
+plot(mc_plot)
 
 combined_plot <- grid.arrange(predicts_plot, mc_plot, ncol = 1)
-ggsave("combined_plot_with_legends_on_left.png", combined_plot, width = 10, height = 12)
+
+ggsave("combined_plot.png", combined_plot, width = 10, height = 12)
 
 #pie(frequency_mc$Frequency, labels = frequency_mc$Order)
 
