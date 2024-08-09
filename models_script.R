@@ -43,17 +43,17 @@ forest_data <- data.frame(
   lower = conf_int[, 1],
   upper = conf_int[, 2]
 )
-custom_labels <- c("(Intercept)", "Managed", "Primary Substantial", "Secondary", "Urban", "Dissimilarity", "Primary Land Cover")
+custom_labels <- c("(Intercept)", "Managed", "Primary Substantial", "Secondary", "Urban", "Dissimilarity 5km", "Primary Land Cover 5km")
 forest_data$term <- custom_labels
 forest_data <- forest_data[forest_data$term != "(Intercept)",]
 forest_data <- forest_data[forest_data$term != "Dissimilarity",]
 forest_data <- forest_data[forest_data$term != "Primary Land Cover",]
 
 forest_data$term <- factor(forest_data$term, 
-                             levels = c("Managed", "Primary Substantial", "Secondary", "Urban", 
-                                        "Dissimilarity", "Primary Land Cover"))
+                             levels = c("Primary Substantial", "Secondary", "Managed", "Urban", 
+                                        "Dissimilarity 5km", "Primary Land Cover 5km"))
 
-forest_data$term_type <- ifelse(forest_data$term %in% c("Dissimilarity", "Primary Land Cover"),
+forest_data$term_type <- ifelse(forest_data$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km"),
                                   "Continuous", "Categorical")
 
 
@@ -97,9 +97,9 @@ forest_data2 <- forest_data2[forest_data2$term != "Primary Land Cover",]
 
 forest_data2$term <- factor(forest_data2$term, 
                            levels = c("Managed", "Primary Substantial", "Secondary", "Urban", 
-                                      "Dissimilarity", "Primary Land Cover"))
+                                      "Dissimilarity 5km", "Primary Land Cover 5km"))
 
-forest_data2$term_type <- ifelse(forest_data2$term %in% c("Dissimilarity", "Primary Land Cover"),
+forest_data2$term_type <- ifelse(forest_data2$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km"),
                                 "Continuous", "Categorical")
 
 ggplot(forest_data2, aes(x = term, y = estimate)) +
@@ -129,15 +129,18 @@ fplot1 <- ggplot(combined_forest_data, aes(x = term, y = estimate, color = outco
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, 
                 position = position_dodge(width = 0.5)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-  theme_minimal() +
+  coord_cartesian(ylim = c(-1.0, 1.0)) +
+   theme_minimal() +
   xlab("") +
-  ylab("Distance from Primary Minimal") +
+  ylab("Parameter Estimate (95% CI)") +
   ggtitle("Predicts Land Use Classifications and Alternative Landscape Metrics") +
-  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+  theme(axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
         axis.text.y = element_text(size = 12),
-        plot.title = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 15),
+         plot.title = element_text(size = 14, face = "bold"),
         panel.grid.major = element_blank(),  
-        panel.grid.minor = element_blank()) + 
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size = 15))+ 
   scale_color_manual(values = c("Richness" = "#1f77b4",  
                                 "Abundance" = "#2ca02c")) + 
   scale_shape_manual(values = c("Categorical" = 16, # Solid circle for categorical variables
@@ -165,7 +168,7 @@ dd$sat_classification <- factor(dd$sat_classification, levels = c("Natural", "Ma
    # TRUE ~ sat_classification  # Keep the original value otherwise
   #))
 
-m3 = glmer(species_richness ~ sat_classification + scale(Dissim_500m) + scale(PrimaryLand_500m) + (1|SS) + (1|SSB), family="poisson", data=dd)
+m3 = glmer(species_richness ~ sat_classification + scale(Dissim_5km) + scale(PrimaryLand_5km) + (1|SS) + (1|SSB), family="poisson", data=dd)
 
 summary(m3)
 
@@ -180,7 +183,7 @@ forest_data3 <- data.frame(
   lower = conf_int3[, 1],
   upper = conf_int3[, 2]
 )
-custom_labels1 <- c("(Intercept)", "Managed", "Urban", "Dissimilarity", "Primary Land Cover")
+custom_labels1 <- c("(Intercept)", "Managed", "Urban", "Dissimilarity 5km", "Primary Land Cover 5km")
 forest_data3$term <- custom_labels1
 forest_data3 <- forest_data3[forest_data3$term != "(Intercept)", ]
 forest_data3 <- forest_data3[forest_data3$term != "Dissimilarity",]
@@ -188,9 +191,9 @@ forest_data3 <- forest_data3[forest_data3$term != "Primary Land Cover",]
 
 forest_data3$term <- factor(forest_data3$term, 
                             levels = c("Managed", "Urban", 
-                                       "Dissimilarity", "Primary Land Cover"))
+                                       "Dissimilarity 5km", "Primary Land Cover 5km"))
 
-forest_data3$term_type <- ifelse(forest_data3$term %in% c("Dissimilarity", "Primary Land Cover"),
+forest_data3$term_type <- ifelse(forest_data3$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km"),
                                  "Continuous", "Categorical")
 
 
@@ -230,9 +233,9 @@ forest_data4 <- forest_data4[forest_data4$term != "Primary Land Cover",]
 
 forest_data4$term <- factor(forest_data4$term, 
                             levels = c("Managed", "Urban", 
-                                       "Dissimilarity", "Primary Land Cover"))
+                                       "Dissimilarity 5km", "Primary Land Cover 5km"))
 
-forest_data4$term_type <- ifelse(forest_data4$term %in% c("Dissimilarity", "Primary Land Cover"),
+forest_data4$term_type <- ifelse(forest_data4$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km"),
                                  "Continuous", "Categorical")
 
 ggplot(forest_data4, aes(x = term, y = estimate)) +
@@ -260,15 +263,18 @@ fplot2 <- ggplot(combined_forest_data2, aes(x = term, y = estimate, color = outc
   geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, 
                 position = position_dodge(width = 0.5)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  coord_cartesian(ylim = c(-1.0, 1.0)) +
   theme_minimal() +
   xlab("") +
-  ylab("Distance from Natural") +
+  ylab("Parameter Estimate (95% CI)") +
   ggtitle("Satellite Land Use Classifications and Alternative Landscape Metrics") +
-  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+  theme(axis.text.x = element_text(size = 15, angle = 45, hjust = 1),
         axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 15),
         plot.title = element_text(size = 14, face = "bold"),
         panel.grid.major = element_blank(),  
-        panel.grid.minor = element_blank()) + 
+        panel.grid.minor = element_blank(),
+        legend.text = element_text(size = 15))+ 
   scale_color_manual(values = c("Richness" = "#1f77b4",  
                                 "Abundance" = "#2ca02c")) + 
   scale_shape_manual(values = c("Categorical" = 16, # Solid circle for categorical variables
@@ -278,10 +284,19 @@ fplot2 <- ggplot(combined_forest_data2, aes(x = term, y = estimate, color = outc
 plot(fplot2)
 ################################################ Put them together ################################################################
 ################################################ Put them together ################################################################
+library(cowplot)
 library(gridExtra)
+legend <- get_legend(fplot1)
+fplot1 <- fplot1 + theme(legend.position = "none")
+fplot2 <- fplot2 + theme(legend.position = "none")
+predicts_land_forest <- plot_grid(
+  fplot1, fplot2, ncol = 2, align = "v", rel_widths = c(1, 1)
+)
+predicts_land_forest <- plot_grid(predicts_land_forest, legend, ncol = 2, rel_widths = c(3, 1))
 predicts_land_forest <- grid.arrange(fplot1, fplot2, ncol = 2)
+plot(predicts_land_forest)
 
-ggsave("predicts_land_forest.png", plot = predicts_land_forest, width = 12, height = 6)
+ggsave("predicts_land_forest.png", plot = predicts_land_forest, width = 14, height = 6)
 
 ################################################ model 2 ################################################################
 ################################################ model 2 ################################################################
@@ -310,15 +325,17 @@ forest_data5 <- data.frame(
   lower = conf_int5[, 1],
   upper = conf_int5[, 2]
 )
-custom_labels3 <- c("(Intercept)", "Managed", "Primary Substantial", "Secondary", "Urban", "Dissimilarity", "Primary Land Cover", "Species Richness")
+custom_labels3 <- c("(Intercept)", "Managed", "Primary Substantial", "Secondary", "Urban", "Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness")
 forest_data5$term <- custom_labels3
 forest_data5 <- forest_data5[forest_data5$term != "(Intercept)", ]
-forest_data5$term <- factor(forest_data5$term, 
-                            levels = c("Managed", "Primary Substantial", 
-                                       "Secondary", "Urban", # Add all categorical terms first
-                                       "Dissimilarity", "Primary Land Cover", "Species Richness"))
+#forest_data5 <- forest_data5[forest_data5$term != "Species Richness", ]
 
-forest_data5$term_type <- ifelse(forest_data5$term %in% c("Dissimilarity", "Primary Land Cover", "Species Richness"),
+forest_data5$term <- factor(forest_data5$term, 
+                            levels = c("Primary Substantial", "Secondary", 
+                                       "Managed", "Urban", 
+                                       "Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness"))
+
+forest_data5$term_type <- ifelse(forest_data5$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness"),
                                  "Continuous", "Categorical")
 
 ggplot(forest_data5, aes(x = term, y = estimate, color = term_type)) +
@@ -359,15 +376,17 @@ forest_data6 <- data.frame(
   lower = conf_int6[, 1],
   upper = conf_int6[, 2]
 )
-custom_labels3 <- c("(Intercept)", "Managed", "Primary Substantial", "Secondary", "Urban", "Dissimilarity", "Primary Land Cover", "Species Richness")
+custom_labels3 <- c("(Intercept)", "Managed", "Primary Substantial", "Secondary", "Urban", "Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness")
 forest_data6$term <- custom_labels3
 forest_data6 <- forest_data6[forest_data6$term != "(Intercept)", ]
-forest_data6$term <- factor(forest_data6$term, 
-                            levels = c("Managed", "Primary Substantial", 
-                                       "Secondary", "Urban", # Add all categorical terms first
-                                       "Dissimilarity", "Primary Land Cover", "Species Richness"))
+forest_data6 <- forest_data6[forest_data6$term != "Species Richness", ]
 
-forest_data6$term_type <- ifelse(forest_data6$term %in% c("Dissimilarity", "Primary Land Cover", "Species Richness"),
+forest_data6$term <- factor(forest_data6$term, 
+                            levels = c("Primary Substantial", "Secondary", 
+                                       "Managed", "Urban", # Add all categorical terms first
+                                       "Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness"))
+
+forest_data6$term_type <- ifelse(forest_data6$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness"),
                                  "Continuous", "Categorical")
 
 ggplot(forest_data6, aes(x = term, y = estimate, color = term_type)) +
@@ -387,16 +406,137 @@ ggplot(forest_data6, aes(x = term, y = estimate, color = term_type)) +
 summary(m4)
 hist(resid(m4), 100)
 
-############################################## combining plots #######################################################################
-############################################## combining plots #######################################################################
-############################################## combining plots #######################################################################
+############################################## host richness plots #######################################################################
+############################################## host richness plots #######################################################################
+############################################## host richness plots #######################################################################
+dd1 = dd %>% left_join(results)
+
+m13 = glmer(HostRichness ~ Land_use_classification + scale(Dissim_5km) + scale(PrimaryLand_5km) + log(species_richness +1) + (MeanPubs_log) + (1|SS) + (1|SSB), family="poisson", data = dd1)
+summary(m13)
+
+fixed_effects13 <- summary(m13)$coefficients
+conf_int13 <- confint(m13, parm = "beta_", method = "Wald")
+
+forest_data13 <- data.frame(
+  term = rownames(fixed_effects13),
+  estimate = fixed_effects13[, "Estimate"],
+  lower = conf_int13[, 1],
+  upper = conf_int13[, 2]
+)
+custom_labels7 <- c("(Intercept)", "Managed", "Primary Substantial", "Secondary", "Urban", "Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness (log)", "effort")
+forest_data13$term <- custom_labels7
+forest_data13 <- forest_data13[forest_data13$term != "(Intercept)", ]
+forest_data13 <- forest_data13[forest_data13$term != "effort", ]
+forest_data13 <- forest_data13[forest_data13$term != "Species Richness (log)", ]
+forest_data13$term <- factor(forest_data13$term, 
+                            levels = c("Primary Substantial", "Secondary", 
+                                       "Managed", "Urban", # Add all categorical terms first
+                                       "Dissimilarity 5km", "Primary Land Cover 5km"))
+
+forest_data13$term_type <- ifelse(forest_data13$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km"),
+                                 "Continuous", "Categorical")
+
+ggplot(forest_data13, aes(x = term, y = estimate, color = term_type)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  theme_minimal() +
+  xlab("") +
+  ylab("Difference from Primary Minimal") +
+  ggtitle("Host Richness") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 12),
+        plot.title = element_text(size = 14, face = "bold")) +
+  scale_color_manual(values = c("Categorical" = "blue", "Continuous" = "black")) +
+  guides(color = FALSE)
+
+############################################## host richness plots #######################################################################
+############################################## host richness plots #######################################################################
+############################################## host richness plots #######################################################################
+
+dd1_ab = dd1 %>% dplyr::filter(Diversity_metric_type == "Abundance")
+
+m14 = lmer(log(HostAbundance+1) ~ Land_use_classification + Dissim_5km + PrimaryLand_5km + log(TotalAbundance+1) + CWMPubs_log + (1|SS) + (1|SSB), data = dd1_ab)
+
+fixed_effects14 <- summary(m14)$coefficients
+conf_int14 <- confint(m14, parm = "beta_", method = "Wald")
+
+forest_data14 <- data.frame(
+  term = rownames(fixed_effects14),
+  estimate = fixed_effects14[, "Estimate"],
+  lower = conf_int14[, 1],
+  upper = conf_int14[, 2]
+)
+custom_labels8 <- c("(Intercept)", "Managed", "Primary Substantial", "Secondary", "Urban", "Dissimilarity 5km", "Primary Land Cover 5km", "Abundance", "MeanPubs_log")
+forest_data14$term <- custom_labels8
+forest_data14 <- forest_data14[forest_data14$term != "(Intercept)", ]
+forest_data14 <- forest_data14[forest_data14$term != "MeanPubs_log", ]
+forest_data14 <- forest_data14[forest_data14$term != "Abundance", ]
+forest_data14$term <- factor(forest_data14$term, 
+                             levels = c("Primary Substantial", "Secondary", 
+                                        "Managed", "Urban", # Add all categorical terms first
+                                        "Dissimilarity 5km", "Primary Land Cover 5km"))
+
+forest_data14$term_type <- ifelse(forest_data14$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km"),
+                                  "Continuous", "Categorical")
+
+ggplot(forest_data14, aes(x = term, y = estimate, color = term_type)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  theme_minimal() +
+  xlab("") +
+  ylab("Difference from Primary Minimal") +
+  ggtitle("Host Abundance") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 12),
+        plot.title = element_text(size = 14, face = "bold")) +
+  scale_color_manual(values = c("Categorical" = "blue", "Continuous" = "black")) +
+  guides(color = FALSE)
+
+############################################## combining M13 & M14 #######################################################################
+############################################## combining M13 & M14 #######################################################################
+############################################## combining M13 & M14 #######################################################################
+
+forest_data13$outcome <- "Host Richness"
+forest_data14$outcome <- "Host Abundance"
+
+combined_forest_data5 <- rbind(forest_data13, forest_data14)
+combined_forest_data5$shape_group <- ifelse(combined_forest_data5$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km"), 
+                                            "Continuous", 
+                                            "Categorical")
+
+fplot5 <- ggplot(combined_forest_data5, aes(x = term, y = estimate, color = outcome, shape = shape_group)) +
+  geom_point(position = position_dodge(width = 0.5), size = 3, fill = "black") + # Adding fill = "black" for filled shapes
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, 
+                position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  theme_minimal() +
+  xlab("") +
+  ylab("Parameter Estimate (95% CI)") +
+  ggtitle("Predicts Land Use Classifications and Alternative Landscape Metrics") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 12),
+        plot.title = element_text(size = 14, face = "bold"),
+        panel.grid.major = element_blank(),  
+        panel.grid.minor = element_blank()) + 
+  scale_color_manual(values = c("Host Richness" = "#D55E00",  
+                                "Host Abundance" = "#1F78B4")) + 
+  scale_shape_manual(values = c("Categorical" = 16, # Solid circle for categorical variables
+                                "Continuous" = 24)) + # Filled triangle for continuous variables
+  labs(color = "Metric", shape = "Variable Type")
+
+plot(fplot5)
+
+############################################## combining M5 & M6 #######################################################################
+############################################## combining M5 & M6 #######################################################################
 
 
 forest_data5$outcome <- "Mean Viral Sharing"
 forest_data6$outcome <- "Community Mean Weighted Viral Sharing"
 
 combined_forest_data3 <- rbind(forest_data5, forest_data6)
-combined_forest_data3$shape_group <- ifelse(combined_forest_data3$term %in% c("Dissimilarity", "Primary Land Cover", "Species Richness"), 
+combined_forest_data3$shape_group <- ifelse(combined_forest_data3$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness"), 
                                             "Continuous", 
                                             "Categorical")
 
@@ -407,8 +547,8 @@ fplot3 <- ggplot(combined_forest_data3, aes(x = term, y = estimate, color = outc
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   theme_minimal() +
   xlab("") +
-  ylab("Distance from Primary Minimal") +
-  ggtitle("Predicts Land Use Classifications and Alternative Landscape Metrics") +
+  ylab("Parameter Estimate (95% CI)") +
+  ggtitle("Satellite Land Use Classifications and Alternative Landscape Metrics") +
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
         axis.text.y = element_text(size = 12),
         plot.title = element_text(size = 14, face = "bold"),
@@ -419,7 +559,127 @@ fplot3 <- ggplot(combined_forest_data3, aes(x = term, y = estimate, color = outc
   scale_shape_manual(values = c("Categorical" = 16, # Solid circle for categorical variables
                                 "Continuous" = 24)) + # Filled triangle for continuous variables
   labs(color = "Metric", shape = "Variable Type")
+
 plot(fplot3)
+
+############################################## Satellite w/ PREDICTS Host Richness #######################################################################
+############################################## Satellite w/ PREDICTS Host Richness #######################################################################
+############################################## Satellite w/ PREDICTS Host Richness #######################################################################
+
+m15 = glmer(HostRichness ~ sat_classification + scale(Dissim_5km) + scale(PrimaryLand_500m) + log(species_richness +1) + MeanPubs_log + (1|SS) + (1|SSB), family="poisson", data = dd1)
+summary(m15)
+
+fixed_effects15 <- summary(m15)$coefficients
+conf_int15 <- confint(m15, parm = "beta_", method = "Wald")
+
+forest_data15 <- data.frame(
+  term = rownames(fixed_effects15),
+  estimate = fixed_effects15[, "Estimate"],
+  lower = conf_int15[, 1],
+  upper = conf_int15[, 2]
+)
+custom_labels8 <- c("(Intercept)", "Managed", "Urban", "Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness (log)", "effort")
+forest_data15$term <- custom_labels8
+forest_data15 <- forest_data15[forest_data15$term != "(Intercept)", ]
+forest_data15 <- forest_data15[forest_data15$term != "effort", ]
+forest_data15 <- forest_data15[forest_data15$term != "Species Richness (log)", ]
+forest_data15$term <- factor(forest_data15$term, 
+                             levels = c( "Managed", "Urban", 
+                                        "Dissimilarity 5km", "Primary Land Cover 5km"))
+
+forest_data15$term_type <- ifelse(forest_data15$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km"),
+                                  "Continuous", "Categorical")
+
+ggplot(forest_data15, aes(x = term, y = estimate, color = term_type)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  theme_minimal() +
+  xlab("") +
+  ylab("Parameter Estimate (95% CI)") +
+  ggtitle("Host Richness") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 12),
+        plot.title = element_text(size = 14, face = "bold")) +
+  scale_color_manual(values = c("Categorical" = "blue", "Continuous" = "black")) +
+  guides(color = FALSE)
+
+############################################## Satellite w/ PREDICTS Host Abundance #######################################################################
+############################################## Satellite w/ PREDICTS Host Abundance #######################################################################
+############################################## Satellite w/ PREDICTS Host Abundance #######################################################################
+
+m16 = lmer(log(HostAbundance+1) ~ sat_classification + Dissim_5km + PrimaryLand_5km + log(TotalAbundance+1) + CWMPubs_log + (1|SS) + (1|SSB), data = dd1_ab)
+summary(m15)
+
+fixed_effects16 <- summary(m16)$coefficients
+conf_int16 <- confint(m16, parm = "beta_", method = "Wald")
+
+forest_data16 <- data.frame(
+  term = rownames(fixed_effects16),
+  estimate = fixed_effects16[, "Estimate"],
+  lower = conf_int16[, 1],
+  upper = conf_int16[, 2]
+)
+custom_labels9 <- c("(Intercept)", "Managed", "Urban", "Dissimilarity 5km", "Primary Land Cover 5km", "Abundance", "effort")
+forest_data16$term <- custom_labels9
+forest_data16 <- forest_data16[forest_data16$term != "(Intercept)", ]
+forest_data16 <- forest_data16[forest_data16$term != "effort", ]
+forest_data16 <- forest_data16[forest_data16$term != "Abundance", ]
+forest_data16$term <- factor(forest_data16$term, 
+                             levels = c( "Managed", "Urban", 
+                                         "Dissimilarity 5km", "Primary Land Cover 5km"))
+
+forest_data16$term_type <- ifelse(forest_data16$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km"),
+                                  "Continuous", "Categorical")
+
+ggplot(forest_data16, aes(x = term, y = estimate, color = term_type)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  theme_minimal() +
+  xlab("") +
+  ylab("Parameter Estimate (95% CI)") +
+  ggtitle("Host Abundance") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 12),
+        plot.title = element_text(size = 14, face = "bold")) +
+  scale_color_manual(values = c("Categorical" = "blue", "Continuous" = "black")) +
+  guides(color = FALSE)
+
+############################################## FPLOT6 #######################################################################
+############################################## FPLOT6 #######################################################################
+############################################## FPLOT6 #######################################################################
+
+forest_data15$outcome <- "Host Richness"
+forest_data16$outcome <- "Host Abundance"
+
+combined_forest_data6 <- rbind(forest_data15, forest_data16)
+combined_forest_data6$shape_group <- ifelse(combined_forest_data6$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km"), 
+                                            "Continuous", 
+                                            "Categorical")
+
+fplot6 <- ggplot(combined_forest_data6, aes(x = term, y = estimate, color = outcome, shape = shape_group)) +
+  geom_point(position = position_dodge(width = 0.5), size = 3, fill = "black") + # Adding fill = "black" for filled shapes
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2, 
+                position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  theme_minimal() +
+  xlab("") +
+  ylab("Parameter Estimate (95% CI)") +
+  ggtitle("Satellite Land Use Classifications and Alternative Landscape Metrics") +
+  theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 12),
+        plot.title = element_text(size = 14, face = "bold"),
+        panel.grid.major = element_blank(),  
+        panel.grid.minor = element_blank()) + 
+  scale_color_manual(values = c("Host Richness" = "#D55E00",  
+                                "Host Abundance" = "#1F78B4")) + 
+  scale_shape_manual(values = c("Categorical" = 16, # Solid circle for categorical variables
+                                "Continuous" = 24)) + # Filled triangle for continuous variables
+  labs(color = "Metric", shape = "Variable Type")
+
+plot(fplot6)
+
 ############################################## mean viral sharing sat class plots #######################################################################
 ############################################## mean viral sharing sat class plots #######################################################################
 ############################################## mean viral sharing sat class plots #######################################################################
@@ -447,16 +707,16 @@ forest_data7 <- data.frame(
   lower = conf_int7[, 1],
   upper = conf_int7[, 2]
 )
-custom_labels4 <- c("(Intercept)", "Managed", "Urban", "Dissimilarity", "Primary Land Cover", "Species Richness")
+custom_labels4 <- c("(Intercept)", "Managed", "Urban", "Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness")
 forest_data7$term <- custom_labels4
 forest_data7 <- forest_data7[forest_data7$term != "(Intercept)", ]
 
 forest_data7$term <- factor(forest_data7$term, 
                             levels = c("Managed", "Natural", 
                                       "Urban", # Add all categorical terms first
-                                       "Dissimilarity", "Primary Land Cover", "Species Richness"))
+                                       "Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness"))
 
-forest_data7$term_type <- ifelse(forest_data7$term %in% c("Dissimilarity", "Primary Land Cover", "Species Richness"),
+forest_data7$term_type <- ifelse(forest_data7$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness"),
                                  "Continuous", "Categorical")
 
 ggplot(forest_data7, aes(x = term, y = estimate, color = term_type)) +
@@ -508,9 +768,9 @@ forest_data8 <- forest_data8[forest_data8$term != "(Intercept)", ]
 forest_data8$term <- factor(forest_data8$term, 
                             levels = c("Managed", "Natural", 
                                        "Urban", # Add all categorical terms first
-                                       "Dissimilarity", "Primary Land Cover", "Species Richness"))
+                                       "Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness"))
 
-forest_data8$term_type <- ifelse(forest_data8$term %in% c("Dissimilarity", "Primary Land Cover", "Species Richness"),
+forest_data8$term_type <- ifelse(forest_data8$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness"),
                                  "Continuous", "Categorical")
 
 ggplot(forest_data8, aes(x = term, y = estimate, color = term_type)) +
@@ -534,7 +794,7 @@ forest_data7$outcome <- "Mean Viral Sharing"
 forest_data8$outcome <- "Community Mean Weighted Viral Sharing"
 
 combined_forest_data4 <- rbind(forest_data7, forest_data8)
-combined_forest_data4$shape_group <- ifelse(combined_forest_data4$term %in% c("Dissimilarity", "Primary Land Cover", "Species Richness"), 
+combined_forest_data4$shape_group <- ifelse(combined_forest_data4$term %in% c("Dissimilarity 5km", "Primary Land Cover 5km", "Species Richness"), 
                                             "Continuous", 
                                             "Categorical")
 
@@ -545,7 +805,7 @@ fplot4 <- ggplot(combined_forest_data4, aes(x = term, y = estimate, color = outc
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   theme_minimal() +
   xlab("") +
-  ylab("Distance from Primary Minimal") +
+  ylab("Parameter Estimate (95% CI)") +
   ggtitle("Satellite Land Use Classifications and Alternative Landscape Metrics") +
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
         axis.text.y = element_text(size = 12),
@@ -561,26 +821,35 @@ plot(fplot4)
 ################################################ Put them together ################################################################
 ################################################ Put them together ################################################################
 library(gridExtra)
-disease_forest <- grid.arrange(fplot3, fplot4, ncol = 1)
+library(cowplot)
+fplot3 <- fplot3 + ggtitle(NULL) + theme(plot.title = element_blank())
+fplot4 <- fplot4 + ggtitle(NULL) + theme(plot.title = element_blank())
+fplot5 <- fplot5 + ggtitle(NULL) + theme(plot.title = element_blank())
+fplot6 <- fplot6 + ggtitle(NULL) + theme(plot.title = element_blank())
 
-ggsave("disease_forest.png", plot = disease_forest, width = 12, height = 10)
+legend2 <- get_legend(fplot3)
+legend3 <- get_legend(fplot5)
 
-################################################ Effect Plot ################################################################
-################################################ Effect Plot ################################################################
+fplot3 <- fplot3 + theme(legend.position = "none")
+fplot4 <- fplot4 + theme(legend.position = "none")
+fplot5 <- fplot5 + theme(legend.position = "none")
+fplot6 <- fplot6 + theme(legend.position = "none")
+
+right_plots <- plot_grid(fplot3, fplot4, ncol = 1)
+left_plots <- plot_grid(fplot5, fplot6, ncol = 1)
+figure2 <- plot_grid(left_plots, right_plots, ncol = 2)
+legends_combined <- plot_grid(legend2, legend3, ncol = 1, align = "v", axis = "l")
+
+figure2 <- plot_grid(
+  figure2, legends_combined, 
+  ncol = 2, rel_widths = c(3, 0.8)
+)
 
 
-library(jtools)
-effect_plot(m1, pred=Dissim_5km, interval = TRUE, plot.points = FALSE,
-            jitter = 0.05)
+print(figure2)
 
-effect_plot(m1, pred=PrimaryLand_5km, interval = TRUE, plot.points = FALSE,
-            jitter = 0.05)
+ggsave("figure2.png", plot = figure2, width = 14, height = 8)
 
-effect_plot(m2, pred=Dissim_5km, interval = TRUE, plot.points = FALSE,
-            jitter = 0.05)
-
-effect_plot(m2, pred=PrimaryLand_5km, interval = TRUE, plot.points = FALSE,
-            jitter = 0.05)
 
 ################################################ MC Plot ################################################################
 ################################################ MC Plot ################################################################
@@ -635,7 +904,7 @@ ggplot(forest_data9, aes(x = term, y = estimate, color = term_type)) +
 
 results = results %>% left_join(zhost_data)
 
-m10 = lmer(scale(HostRichness) ~ classification + scale(Dissim_5km) + scale(PrimaryLand_5km) + scale(species_richness) + MeanPubs_log + (1|Reference), data=results)
+m10 = lmer(scale(HostRichness) ~ classification + scale(Dissim_5km) + scale(PrimaryLand_5km) + offset(species_richness) + scale(species_richness) +MeanPubs_log + (1|Reference), data=results)
 
 summary(m10)
 
@@ -648,7 +917,7 @@ forest_data10 <- data.frame(
   lower = conf_int10[, 1],
   upper = conf_int10[, 2]
 )
-custom_labels6 <- c("(Intercept)", "Managed","Urban", "Dissimilarity", "Primary Land Cover", "Species Richness", "Sampling Effort")
+custom_labels6 <- c("(Intercept)", "Managed","Urban", "Dissimilarity", "Primary Land Cover", "Species Richness","Sampling Effort")
 forest_data10$term <- custom_labels6
 forest_data10 <- forest_data10[forest_data10$term != "(Intercept)", ]
 forest_data10 <- forest_data10[forest_data10$term != "Sampling Effort", ]
@@ -656,7 +925,7 @@ forest_data10 <- forest_data10[forest_data10$term != "Sampling Effort", ]
 
 forest_data10$term <- factor(forest_data10$term, 
                             levels = c("Managed", 
-                                       "Urban", # Add all categorical terms first
+                                       "Urban", 
                                        "Dissimilarity", "Primary Land Cover", "Species Richness"))
 
 forest_data10$term_type <- ifelse(forest_data10$term %in% c("Dissimilarity", "Primary Land Cover", "Species Richness"),
@@ -700,7 +969,7 @@ forest_data11 <- forest_data11[forest_data11$term != "Sampling Effort", ]
 
 forest_data11$term <- factor(forest_data11$term, 
                              levels = c("Managed", 
-                                        "Urban", # Add all categorical terms first
+                                        "Urban", 
                                         "Dissimilarity", "Primary Land Cover", "Species Richness"))
 
 forest_data11$term_type <- ifelse(forest_data11$term %in% c("Dissimilarity", "Primary Land Cover", "Species Richness"),
@@ -744,7 +1013,7 @@ forest_data12 <- forest_data12[forest_data12$term != "(Intercept)", ]
 
 forest_data12$term <- factor(forest_data12$term, 
                             levels = c("Managed", 
-                                       "Urban", # Add all categorical terms first
+                                       "Urban", 
                                        "Dissimilarity", "Primary Land Cover", "Species Richness"))
 
 forest_data12$term_type <- ifelse(forest_data12$term %in% c("Dissimilarity", "Primary Land Cover", "Species Richness"),
